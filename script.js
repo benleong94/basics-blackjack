@@ -1,12 +1,12 @@
 // Global Variables
 var players = []
-var carddeck, dealButton, hitButton, standButtonm, revealButton
+var carddeck, dealButton, hitButton, standButton, revealButton, output
 
 // Functions 
 var initializeDeck = function () {
 
   var cardDeck = [];
-  var suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+  var suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
 
   var suitIndex = 0;
   while (suitIndex < suits.length) {
@@ -15,13 +15,13 @@ var initializeDeck = function () {
     while (rankCounter <= 13) {
       var cardName = rankCounter;
       if (cardName == 1) {
-        cardName = 'ace';
+        cardName = 'Ace';
       } else if (cardName == 11) {
-        cardName = 'jack';
+        cardName = 'Jack';
       } else if (cardName == 12) {
-        cardName = 'queen';
+        cardName = 'Queen';
       } else if (cardName == 13) {
-        cardName = 'king';
+        cardName = 'King';
       }
     
       var card = {
@@ -41,40 +41,72 @@ var initializeDeck = function () {
 };
 
 var initializePlayers = function(playerNum){
-  for (let i = 1; i <= playerNum.length; i++) {
-    var player = {
-      name: "player" + i,
-      playerhand: []
-    };
+  for (let i = 1; i <= playerNum; i++) {
+    if(i == playerNum){
+      var player = {
+        name: "Computer",
+        playerHand: []
+      };
+    } else{
+      var player = {
+        name: "Player #" + i,
+        playerHand: []
+      };
+    }    
     players.push(player);
   }
 }
 
 var initializeButtons = function(){
+
   dealButton = document.querySelector("#deal-button");
   hitButton = document.querySelector("#hit-button");
   standButton = document.querySelector("#stand-button");
   revealButton = document.querySelector("#reveal-button");
-
-  disableButton(hitButton);
-  disableButton(standButton);
-  disableButton(revealButton);
+  output = document.querySelector("#output-div");
 
   dealButton.addEventListener("click", function () {
-    var card = chooseRandomCard();    
-    var cardsLeftNum = carddeck.length;
-
-    if (cardsLeftNum == 0){
-      var cardOutput = "No Cards Left!"
-    } else{
-      var cardOutput = card.name + " of " + card.suit;
+    var cardOutput = "";
+    if (carddeck.length == 0){
+      cardOutput = "No Cards Left!"
+    } else {
+      dealFirstHand();
+      for (let i=0; i<players.length; i++){
+        var playerName = players[i].name + " Hand"; 
+        var currentScore = calculateHand(players[i]);
+        var playerHandOutput = listOutHand(players[i]);
+        cardOutput += playerName + ": <br>" + playerHandOutput + "Score(s): " + currentScore + "<br><br>";
+      };
     }
-
-    var output = document.querySelector("#output-div");
-    output.innerHTML = cardOutput + "<br>" + cardsLeftNum;
+    output.innerHTML = cardOutput;
+    disableCase(2); 
   })
 
+  disableCase(1); 
 };
+
+var disableCase = function(num){
+  switch(num){
+    case 1:
+      enableButton(dealButton);
+      disableButton(hitButton);
+      disableButton(standButton);
+      disableButton(revealButton);
+      return;
+    case 2:
+      disableButton(dealButton);
+      enableButton(hitButton);
+      enableButton(standButton);
+      disableButton(revealButton);
+      return; 
+    default: 
+      disableButton(dealButton);
+      disableButton(hitButton);
+      disableButton(standButton);
+      disableButton(revealButton);
+      return;
+  }
+}
 
 var disableButton = function (buttonType) {
   var button = buttonType;
@@ -96,12 +128,55 @@ var chooseRandomCard = function () {
   return card;
 }
 
+var dealFirstHand = function () {
+  for (let i = 0; i < players.length; i++){
+    var cardOne = chooseRandomCard(); 
+    var cardTwo = chooseRandomCard();
+    players[i].playerHand.push(cardOne);
+    players[i].playerHand.push(cardTwo);          
+  }
+}
+
+var dealHit = function () {
+
+}
+
 var checkCards = function () {
   var cards = ""; 
   for (let i=0; i< carddeck.length; i++){
     cards += carddeck[i].name + " of " + carddeck[i].suit + "<br>";
   }
   return cards;
+}
+
+var listOutHand = function (player) {
+  var hand = "";
+  for (let i=0; i<player.playerHand.length; i++){
+    hand += player.playerHand[i].name + " of " + player.playerHand[i].suit + "<br>"
+  }
+  return hand; 
+}
+
+var calculateHand = function (player) {
+  let hand = player.playerHand;
+  let scores = new Set([0]); 
+    
+  hand.forEach(card => {
+    const newScores = new Set(); 
+    scores.forEach(score => {
+        if (card.name === 'Ace') { 
+            newScores.add(score + 1);
+            newScores.add(score + 11);
+        } else if (['King', 'Queen', 'Jack'].includes(card.name)) { 
+            newScores.add(score + 10);
+        } else if (!isNaN(parseInt(card.name))) { 
+            newScores.add(score + parseInt(card.name));
+        } 
+    });
+    scores = newScores;
+  });
+
+  return Array.from(scores); 
 }
 
 var main = function(playerNum)
