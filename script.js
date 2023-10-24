@@ -1,9 +1,9 @@
-// let carddeck = JSON.parse(localStorage.getItem('deck_of_cards'));
 // Global Variables
 var players = []
+var carddeck, dealButton, hitButton, standButtonm, revealButton
 
 // Functions 
-var makeDeck = function () {
+var initializeDeck = function () {
 
   var cardDeck = [];
   var suits = ['hearts', 'diamonds', 'clubs', 'spades'];
@@ -36,7 +36,8 @@ var makeDeck = function () {
 
     suitIndex += 1;
   }
-  return cardDeck;
+
+  carddeck = cardDeck;
 };
 
 var initializePlayers = function(playerNum){
@@ -49,45 +50,65 @@ var initializePlayers = function(playerNum){
   }
 }
 
-var initializeButtons = function()
-{
-  var dealButton = document.querySelector("#deal-button");
-  var hitButton = document.querySelector("#hit-button");
-  var standButton = document.querySelector("#stand-button");
-  var revealButton = document.querySelector("#reveal-button");
+var initializeButtons = function(){
+  dealButton = document.querySelector("#deal-button");
+  hitButton = document.querySelector("#hit-button");
+  standButton = document.querySelector("#stand-button");
+  revealButton = document.querySelector("#reveal-button");
 
-  disableButton(dealButton);
   disableButton(hitButton);
   disableButton(standButton);
   disableButton(revealButton);
 
-  // deal-button.addEventListener("click", function () {
-  //   var input = document.querySelector("#input-field");
-  //   var result = main(input.value);
-  //   var output = document.querySelector("#output-div");
-  //   output.innerHTML = result;
-  //   input.value = "";
-  // })
+  dealButton.addEventListener("click", function () {
+    var card = chooseRandomCard();    
+    var cardsLeftNum = carddeck.length;
 
-  };
+    if (cardsLeftNum == 0){
+      var cardOutput = "No Cards Left!"
+    } else{
+      var cardOutput = card.name + " of " + card.suit;
+    }
 
-function disableButton(buttonType) {
+    var output = document.querySelector("#output-div");
+    output.innerHTML = cardOutput + "<br>" + cardsLeftNum;
+  })
+
+};
+
+var disableButton = function (buttonType) {
   var button = buttonType;
   button.disabled = true;
   button.style.opacity = "0.5"; 
 }
 
-function enableButton(buttonType) {
+var enableButton = function (buttonType) {
   var button = buttonType; 
   button.disabled = false;
   button.style.opacity = "1"; // Restores the button's appearance
 }
 
-// var main = function (input) {
-//   var myOutputValue = 'hello world';
-//   return myOutputValue;
-// };
+var chooseRandomCard = function () {
+  
+  var card = carddeck[Math.floor(Math.random() * carddeck.length)]
+  carddeck = carddeck.filter(item => item !== card)
 
-var cardeck = makeDeck();
-initializePlayers(2);
-initializeButtons();
+  return card;
+}
+
+var checkCards = function () {
+  var cards = ""; 
+  for (let i=0; i< carddeck.length; i++){
+    cards += carddeck[i].name + " of " + carddeck[i].suit + "<br>";
+  }
+  return cards;
+}
+
+var main = function(playerNum)
+{
+  initializeDeck();
+  initializePlayers(playerNum);
+  initializeButtons();
+}
+
+main(2);
