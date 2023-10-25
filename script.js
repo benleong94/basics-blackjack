@@ -1,5 +1,7 @@
 // Global Variables
 var players = []
+var winList = []
+var loseList = []
 var carddeck, dealButton, hitButton, standButton, revealButton, output
 
 // Functions 
@@ -45,12 +47,14 @@ var initializePlayers = function(playerNum){
     if(i == playerNum){
       var player = {
         name: "Computer",
-        playerHand: []
+        playerHand: [],
+        currentScore: []
       };
-    } else{
+    } else {
       var player = {
         name: "Player #" + i,
-        playerHand: []
+        playerHand: [],
+        currentScore: []
       };
     }    
     players.push(player);
@@ -70,16 +74,25 @@ var initializeButtons = function(){
     if (carddeck.length == 0){
       cardOutput = "No Cards Left!"
     } else {
+
       dealFirstHand();
+
       for (let i=0; i<players.length; i++){
-        var playerName = players[i].name + " Hand"; 
-        var currentScore = calculateHand(players[i]);
+        var playerName = "<b>" + players[i].name + " Hand </b>"; 
+        players[i].currentScore = calculateHand(players[i]);
         var playerHandOutput = listOutHand(players[i]);
-        cardOutput += playerName + ": <br>" + playerHandOutput + "Score(s): " + currentScore + "<br><br>";
+        cardOutput += playerName + ": <br>" + playerHandOutput + "<b> Score(s): </b>" + players[i].currentScore + "<br><br>";    
       };
+
+      if(checkWinOrLose() == true) {
+        cardOutput += "Winners: " + winList
+        output.innerHTML = cardOutput;
+        resetGame();
+      } else {
+        output.innerHTML = cardOutput;
+        resetGame();     
+      }
     }
-    output.innerHTML = cardOutput;
-    disableCase(2); 
   })
 
   disableCase(1); 
@@ -177,6 +190,29 @@ var calculateHand = function (player) {
   });
 
   return Array.from(scores); 
+}
+
+var checkWinOrLose = function() {
+  var check = false; 
+  for (let i=0; i<players.length; i++){
+    players[i].currentScore.forEach(score => {
+      if (score == 21) {
+        winList.push(players[i].name);
+        check = true; 
+      } else if (score > 21) {
+        loseList.push(players[i].name)
+        check = true;
+      } 
+    })
+  };
+  return check;
+}
+
+var resetGame = function() {
+  players = []
+  winList = []
+  loseList = []
+  main(2);
 }
 
 var main = function(playerNum)
