@@ -2,7 +2,7 @@ let deck_of_cards = [
     {
       name: 'ace',
       suit: 'hearts',
-      rank: 1,
+      rank: 1
     },
     {
       name: '2',
