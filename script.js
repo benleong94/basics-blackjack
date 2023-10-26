@@ -1,8 +1,9 @@
 // Global Variables
 var players = [];
+var playerNameList = []; 
 var winList = [];
 var loseList = [];
-var carddeck, dealButton, hitButton, standButton, revealButton, output, playerNum, cardOutput;
+var carddeck, dealButton, hitButton, standButton, revealButton, resetButton, output, playerNum, cardOutput;
 var playerNum = 2; 
 var playerTurn = 0; 
 
@@ -48,6 +49,7 @@ var initializePlayers = function(playerNum){
       name: "",
       playerHand: [],
       currentScore: [],
+      bestScore: 0, 
       status: ""
     };
 
@@ -55,8 +57,10 @@ var initializePlayers = function(playerNum){
       player.name = "Computer";
     } else {
       player.name = "Player #" + i;
-    }    
+    }
+
     players.push(player);
+    playerNameList.push(player.name);
   }
 }
 
@@ -66,6 +70,7 @@ var initializeButtons = function(){
   hitButton = document.querySelector("#hit-button");
   standButton = document.querySelector("#stand-button");
   revealButton = document.querySelector("#reveal-button");
+  resetButton = document.querySelector("#reset-button");
   output = document.querySelector("#output-div");
 
   dealButton.addEventListener("click", function () {
@@ -75,7 +80,7 @@ var initializeButtons = function(){
       cardOutput = "No Cards Left!"
     } else {
       dealFirstHand();
-      displayFullList(); 
+      updateAllPlayersProfile();
       validationMessage();
     }
   })
@@ -84,13 +89,36 @@ var initializeButtons = function(){
     cardOutput = "";
     players[playerTurn].status = "Hit"; 
     dealHit();
-    displayFullList();
+    updateAllPlayersProfile();
     validationMessage();
   })
 
   standButton.addEventListener("click", function () {
     cardOutput = "";
+    players[playerTurn].status = "Stand"; 
+    playerTurn++;
+    displayPlayerList();
+    cardOutput += "Please click 'Reveal' to see computer's hand."; 
+    output.innerHTML = cardOutput; 
 
+    if(playerTurn == playerNum - 1){
+      disableCase(3);
+    } else {
+      disableCase(2);
+    }
+  })
+
+  revealButton.addEventListener("click", function () {
+    cardOutput = "";
+    dealComputer();
+    updateAllPlayersProfile();
+    displayFullList();
+    finalValidationMessage();
+    disableCase(4); 
+  })
+
+  resetButton.addEventListener("click", function () {
+    resetGame(); 
   })
 };
 
@@ -101,18 +129,35 @@ var disableCase = function(num){
       disableButton(hitButton);
       disableButton(standButton);
       disableButton(revealButton);
+      disableButton(resetButton);
       return;
     case 2:
       disableButton(dealButton);
       enableButton(hitButton);
       enableButton(standButton);
       disableButton(revealButton);
+      enableButton(resetButton);
+      return; 
+    case 3:
+      disableButton(dealButton);
+      disableButton(hitButton);
+      disableButton(standButton);
+      enableButton(revealButton);
+      enableButton(resetButton);
+      return; 
+    case 4:
+      disableButton(dealButton);
+      disableButton(hitButton);
+      disableButton(standButton);
+      disableButton(revealButton);
+      enableButton(resetButton);
       return; 
     default: 
       disableButton(dealButton);
       disableButton(hitButton);
       disableButton(standButton);
       disableButton(revealButton);
+      disableButton(resetButton);
       return;
   }
 }
@@ -156,6 +201,32 @@ var dealHit = function () {
   })
 }
 
+var dealComputer = function () {
+  var computer = players[players.length - 1];
+  var computerChoiceNum = Math.floor(Math.random() * 3) + 1;
+
+  if (computerChoiceNum == 0){
+    return ;
+  } else {
+    for (let i=0; i<computerChoiceNum; i++) {
+      var computerChoice = Math.floor(Math.random() * 2);
+      if(computerChoice == 0) {
+        console.log("Computer chooses to hit!");
+        computer.status = "Hit";
+        dealHit()
+        computer.bestScore = updateScoreForUse(computer.currentScore);
+        if(computer.bestScore > 21){
+          return
+        }
+      } else if (computerChoice == 1) {
+        console.log("Computer chooses to stand!");
+        return 
+      }
+    }
+  }
+
+}
+
 var checkCards = function () {
   var cards = ""; 
   for (let i=0; i< carddeck.length; i++){
@@ -172,13 +243,28 @@ var listOutHand = function (player) {
   return hand; 
 }
 
+var updateAllPlayersProfile = function () {
+  for (let i=0; i<players.length; i++){
+    players[i].currentScore = calculateHand(players[i]);
+    players[i].bestScore = updateScoreForUse(players[i].currentScore);
+  };
+}
+
 var displayFullList = function () {
   for (let i=0; i<players.length; i++){
     var playerName = "<b>" + players[i].name + " Hand </b>"; 
-    players[i].currentScore = calculateHand(players[i]);
     var playerHandOutput = listOutHand(players[i]);
     cardOutput += playerName + ": <br>" + playerHandOutput + "<b> Score(s): </b>" + players[i].currentScore + 
-                  "<br> Chosen Score To Display: " + selectBestNumber(players[i].currentScore) + "<br><br>";    
+                  "<br> <b> Best Score: </b>" + players[i].bestScore + "<br><br>";    
+  };
+}
+
+var displayPlayerList = function () {
+  for (let i=0; i<players.length-1; i++){
+    var playerName = "<b>" + players[i].name + " Hand </b>"; 
+    var playerHandOutput = listOutHand(players[i]);
+    cardOutput += playerName + ": <br>" + playerHandOutput + "<b> Score(s): </b>" + players[i].currentScore + 
+                  "<br> <b> Best Score: </b>" + players[i].bestScore + "<br><br>";    
   };
 }
 
@@ -239,6 +325,14 @@ var checkforNumberNotLargerThan21 = function (array) {
   return check; 
 }
 
+var updateScoreForUse = function (scores) {
+  if (scores.length == 1){
+    return scores[0];
+  } else {
+    return selectBestNumber(scores);
+  }
+}
+
 var selectBestNumber = function (scores) {
   max = 0; 
   scores.forEach(score => {
@@ -256,26 +350,118 @@ var selectBestNumber = function (scores) {
 
 var validationMessage = function() {
   if(checkWin() == true) {
-    cardOutput += winList + " wins!"  
+    displayFullList();
+    for(let i=0; i<winList.length; i++){
+      for(let j=0; j<playerNameList.length; j++){
+        if(playerNameList[j] !== winList[i]){
+          loseList.push(playerNameList[j]);
+        }
+      }
+    }
+    cardOutput += winList + " wins! <br>" +
+                  loseList + " loses!";
+
     output.innerHTML = cardOutput;
-    resetGame();
+    disableCase(4);  
   } else if (checkLose() == true) {
-    cardOutput += loseList + " loses!"
+    displayFullList();
+    for(let i=0; i<loseList.length; i++){
+      for(let j=0; j<playerNameList.length; j++){
+        if(playerNameList[j] !== loseList[i]){
+          winList.push(playerNameList[j]);
+        }
+      }
+    }
+    cardOutput += winList + " wins! <br>" +
+                  loseList + " loses!";
     output.innerHTML = cardOutput;
-    resetGame();
+    disableCase(4);  
   } else {
+    displayPlayerList();
     cardOutput += players[playerTurn].name + ", please select <b>'Hit'</b> to draw another card or <b>'Stand'</b> to move to next player's turn."
     output.innerHTML = cardOutput;
     disableCase(2);     
   }
 }
 
+var finalValidationMessage = function() {
+  if(checkWin() == true) {  
+    for(let i=0; i<winList.length; i++){
+      for(let j=0; j<playerNameList.length; j++){
+        if(playerNameList[j] !== winList[i]){
+          loseList.push(playerNameList[j]);
+        }
+      }
+    }
+    cardOutput += winList + " wins! <br>" +
+                  loseList + " loses!";
+    output.innerHTML = cardOutput;
+    disableCase(4);  
+  } else if (checkLose() == true) {
+    for(let i=0; i<loseList.length; i++){
+      for(let j=0; j<playerNameList.length; j++){
+        if(playerNameList[j] !== loseList[i]){
+          winList.push(playerNameList[j]);
+        }
+      }
+    }
+    cardOutput += winList + " wins! <br>" +
+                  loseList + " loses!";
+    output.innerHTML = cardOutput;
+    disableCase(4);   
+  } else {
+    var arrayOfScores = []
+    var maxScore = players[0].bestScore;
+    var bestPlayer = players[0].name; 
+
+    for (let i=0; i<players.length; i++){
+      arrayOfScores.push(players[i].bestScore);
+      if (players[i].bestScore > maxScore){
+        maxScore = players[i].bestScore;
+        bestPlayer = players[i].name; 
+      }
+    }
+
+    if (allAreEqual(arrayOfScores)){
+      cardOutput += "It's a Draw!";
+      output.innerHTML = cardOutput; 
+      return;
+    } else {
+      winList.push(bestPlayer);
+
+      for(let i=0; i<winList.length; i++){
+        for(let j=0; j<playerNameList.length; j++){
+          if(playerNameList[j] !== winList[i]){
+            loseList.push(playerNameList[j]);
+          }
+        }
+      }
+      cardOutput += winList + " wins! <br>" +
+                    loseList + " loses!";
+
+      output.innerHTML = cardOutput;
+      return; 
+    }
+  }
+}
+
+var allAreEqual = function (array) {
+  const result = array.every(element => {
+    if (element === array[0]) {
+      return true;
+    }
+  });
+  return result;
+}
+
 var resetGame = function() {
   players = []
+  playerNameList = []; 
   winList = []
   loseList = []
   playerTurn = 0; 
   cardOutput = "";
+  output.innerHTML = "";
   initializeDeck();
   initializePlayers(playerNum);
   disableCase(1); 
