@@ -11,7 +11,7 @@ var playerTurn = 0;
 var initializeDeck = function () {
 
   carddeck = [];
-  var suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
+  var suits = ['♥', '♦', '♣', '♠'];
 
   var suitIndex = 0;
   while (suitIndex < suits.length) {
