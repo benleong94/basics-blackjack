@@ -27,7 +27,7 @@
   }
 
   #container {
-    background-color: pink;
+    background-color: rgb(12, 104, 112);
     margin: 40px auto;
     max-width: 800px;
     padding: 38px 31px;
@@ -58,6 +58,11 @@
     margin: 20px auto;
     padding: 20px;
     width: 100%;
+  }
+
+  #welcomeHeader {
+    color: rgb(235, 235, 235);
+    font-size: 25px; 
   }
 
   .logo-img {
