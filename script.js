@@ -3,9 +3,10 @@ var players = [];
 var playerNameList = []; 
 var winList = [];
 var loseList = [];
-var carddeck, dealButton, hitButton, standButton, revealButton, resetButton, output, playerNum, cardOutput;
+var carddeck, dealButton, hitButton, standButton, revealButton, resetButton, output, playerNum, cardOutput, imageContainer, changePicture;
 var playerNum = 2; 
 var playerTurn = 0; 
+var blackPink = ['lisa', 'rose', 'jennie', 'jisoo', 'jisoo2', 'lisa2','rose2','jennie2']; 
 
 // Functions 
 var initializeDeck = function () {
@@ -54,7 +55,7 @@ var initializePlayers = function(playerNum){
     };
 
     if(i == playerNum){
-      player.name = "Computer";
+      player.name = "BlackPink";
     } else {
       player.name = "Player #" + i;
     }
@@ -71,6 +72,10 @@ var initializeButtons = function(){
   standButton = document.querySelector("#stand-button");
   revealButton = document.querySelector("#reveal-button");
   resetButton = document.querySelector("#reset-button");
+  welcomeHeader = document.querySelector("#welcomeHeader");
+  imageContainer = document.querySelector("#image-container");
+  changePicButton = document.querySelector("#changePicture")
+  changePicButton.style.display = 'none';
   output = document.querySelector("#output-div");
 
   dealButton.addEventListener("click", function () {
@@ -82,6 +87,10 @@ var initializeButtons = function(){
       dealFirstHand();
       updateAllPlayersProfile();
       validationMessage();
+      welcomeHeader.innerHTML = "Let's Go!" 
+      var randomPicture = randomBpPicture();
+      changePicButton.style.display = 'block';
+      imageContainer.innerHTML = '<img class="blackpink-image" id="'+ randomPicture +'"src="blackpink/'+ randomPicture +'.gif" alt="'+ randomPicture +'">'
     }
   })
 
@@ -98,7 +107,7 @@ var initializeButtons = function(){
     players[playerTurn].status = "Stand"; 
     playerTurn++;
     displayPlayerList();
-    cardOutput += "Please click 'Reveal' to see computer's hand."; 
+    cardOutput += "Please click 'Reveal' to see Blackpink's hand."; 
     output.innerHTML = cardOutput; 
 
     if(playerTurn == playerNum - 1){
@@ -119,6 +128,14 @@ var initializeButtons = function(){
 
   resetButton.addEventListener("click", function () {
     resetGame(); 
+    changePicButton.style.display = 'none';
+    welcomeHeader.innerHTML = "Welcome, Hit 'Deal' To Start Game!"; 
+    imageContainer.innerHTML = '<img class="blackpink-image" id="bp-main" src="blackpink/blackpink-main.jpg" alt="BlackPink Main">';
+  })
+
+  changePicButton.addEventListener("click", function () {
+    var randomPicture = randomBpPicture();
+    imageContainer.innerHTML = '<img class="blackpink-image" id="'+ randomPicture +'"src="blackpink/'+ randomPicture +'.gif" alt="'+ randomPicture +'">';
   })
 };
 
@@ -203,28 +220,44 @@ var dealHit = function () {
 
 var dealComputer = function () {
   var computer = players[players.length - 1];
-  var computerChoiceNum = Math.floor(Math.random() * 3) + 1;
-
-  if (computerChoiceNum == 0){
-    return ;
-  } else {
-    for (let i=0; i<computerChoiceNum; i++) {
+  var computerChoiceNum = 0; 
+  if (computer.bestScore < 13){
+    computerChoiceNum = 2;
+    for (let i=1; i<=computerChoiceNum; i++) {
       var computerChoice = Math.floor(Math.random() * 2);
-      if(computerChoice == 0) {
+      if (computer.bestScore > 21){
+        return
+      } else if(computerChoice == 0) {
         console.log("Computer chooses to hit!");
         computer.status = "Hit";
         dealHit()
         computer.bestScore = updateScoreForUse(computer.currentScore);
-        if(computer.bestScore > 21){
-          return
-        }
       } else if (computerChoice == 1) {
         console.log("Computer chooses to stand!");
         return 
       }
     }
+  } else {
+    computerChoiceNum = Math.floor(Math.random() * 3);  
+    if (computerChoiceNum == 0){
+      return ;
+    } else {
+      for (let i=1; i<=computerChoiceNum; i++) {
+        var computerChoice = Math.floor(Math.random() * 2);
+        if (computer.bestScore > 21){
+          return
+        } else if(computerChoice == 0) {
+          console.log("Computer chooses to hit!");
+          computer.status = "Hit";
+          dealHit()
+          computer.bestScore = updateScoreForUse(computer.currentScore);
+        } else if (computerChoice == 1) {
+          console.log("Computer chooses to stand!");
+          return 
+        }
+      }
+    }
   }
-
 }
 
 var checkCards = function () {
@@ -254,7 +287,7 @@ var displayFullList = function () {
   for (let i=0; i<players.length; i++){
     var playerName = "<b>" + players[i].name + " Hand </b>"; 
     var playerHandOutput = listOutHand(players[i]);
-    cardOutput += playerName + ": <br>" + playerHandOutput + "<b> Score(s): </b>" + players[i].currentScore + 
+    cardOutput += playerName + ": <br>" + playerHandOutput + "<b> Possible Scores: </b>" + players[i].currentScore + 
                   "<br> <b> Best Score: </b>" + players[i].bestScore + "<br><br>";    
   };
 }
@@ -263,7 +296,7 @@ var displayPlayerList = function () {
   for (let i=0; i<players.length-1; i++){
     var playerName = "<b>" + players[i].name + " Hand </b>"; 
     var playerHandOutput = listOutHand(players[i]);
-    cardOutput += playerName + ": <br>" + playerHandOutput + "<b> Score(s): </b>" + players[i].currentScore + 
+    cardOutput += playerName + ": <br>" + playerHandOutput + "<b> Possible Scores: </b>" + players[i].currentScore + 
                   "<br> <b> Best Score: </b>" + players[i].bestScore + "<br><br>";    
   };
 }
@@ -358,10 +391,10 @@ var validationMessage = function() {
         }
       }
     }
-    cardOutput += winList + " wins! <br>" +
+    cardOutput += "<b>"+ winList + " wins! </b> <br>" +
                   loseList + " loses!";
-
     output.innerHTML = cardOutput;
+    checkBlackpinkResult(winList,loseList)
     disableCase(4);  
   } else if (checkLose() == true) {
     displayFullList();
@@ -372,14 +405,17 @@ var validationMessage = function() {
         }
       }
     }
-    cardOutput += winList + " wins! <br>" +
+    cardOutput += "<b>"+ winList + " wins! </b> <br>" +
                   loseList + " loses!";
     output.innerHTML = cardOutput;
+    checkBlackpinkResult(winList,loseList)
     disableCase(4);  
   } else {
     displayPlayerList();
     cardOutput += players[playerTurn].name + ", please select <b>'Hit'</b> to draw another card or <b>'Stand'</b> to move to next player's turn."
     output.innerHTML = cardOutput;
+    var randomPicture = randomBpPicture()
+    imageContainer.innerHTML = '<img class="blackpink-image" id="'+ randomPicture +'"src="blackpink/'+ randomPicture +'.gif" alt="'+ randomPicture +'">'
     disableCase(2);     
   }
 }
@@ -393,9 +429,10 @@ var finalValidationMessage = function() {
         }
       }
     }
-    cardOutput += winList + " wins! <br>" +
+    cardOutput += "<b>"+ winList + " wins! </b> <br>" +
                   loseList + " loses!";
     output.innerHTML = cardOutput;
+    checkBlackpinkResult(winList,loseList)
     disableCase(4);  
   } else if (checkLose() == true) {
     for(let i=0; i<loseList.length; i++){
@@ -405,9 +442,10 @@ var finalValidationMessage = function() {
         }
       }
     }
-    cardOutput += winList + " wins! <br>" +
+    cardOutput += "<b>"+ winList + " wins! </b> <br>" +
                   loseList + " loses!";
     output.innerHTML = cardOutput;
+    checkBlackpinkResult(winList,loseList)
     disableCase(4);   
   } else {
     var arrayOfScores = []
@@ -421,10 +459,10 @@ var finalValidationMessage = function() {
         bestPlayer = players[i].name; 
       }
     }
-
     if (allAreEqual(arrayOfScores)){
-      cardOutput += "It's a Draw!";
+      cardOutput += "<b>It's a Draw!</b>";
       output.innerHTML = cardOutput; 
+      checkBlackpinkResult(winList,loseList)
       return;
     } else {
       winList.push(bestPlayer);
@@ -436,13 +474,29 @@ var finalValidationMessage = function() {
           }
         }
       }
-      cardOutput += winList + " wins! <br>" +
+      cardOutput += "<b>"+ winList + " wins! </b> <br>" +
                     loseList + " loses!";
 
       output.innerHTML = cardOutput;
+      checkBlackpinkResult(winList,loseList)
       return; 
     }
   }
+}
+
+var checkBlackpinkResult = function(winList, loseList){
+  if (winList[0] == "BlackPink" || loseList[0] == "Player #1") {
+    imageContainer.innerHTML = '<img class="blackpink-image" id="bp-main" src="blackpink/blackpink-happy.gif" alt="bp-main">';
+  } else if(loseList[0] == "BlackPink" || winList[0] == "Player #1"){
+    imageContainer.innerHTML = '<img class="blackpink-image" id="bp-sad" src="blackpink/blackpink-sad.gif" alt="bp-sad">';
+  } else {
+    imageContainer.innerHTML = '<img class="blackpink-image" id="bp-main" src="blackpink/blackpink-main.jpg" alt="bp-main">';
+  }
+}
+
+var randomBpPicture = function() {
+  var random = blackPink[Math.floor(Math.random() * (blackPink.length-1))];
+  return random
 }
 
 var allAreEqual = function (array) {
