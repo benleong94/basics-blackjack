@@ -495,7 +495,7 @@ var checkBlackpinkResult = function(winList, loseList){
 }
 
 var randomBpPicture = function() {
-  var random = blackPink[Math.floor(Math.random() * (blackPink.length-1))];
+  var random = blackPink[Math.floor(Math.random() * (blackPink.length))];
   return random
 }
 
